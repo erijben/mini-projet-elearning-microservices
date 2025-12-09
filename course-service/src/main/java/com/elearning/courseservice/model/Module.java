@@ -1,17 +1,20 @@
 package com.elearning.courseservice.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
+import lombok.Setter;
 
 @Entity
 @Table(name = "modules")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Module {
 
     @Id
@@ -19,15 +22,10 @@ public class Module {
     private Long id;
 
     private String title;
-
-    @Column(length = 4000)
-    private String content; // description / résumé du module
-
-    private Integer orderIndex; // ordre du module dans le cours (1,2,3,...)
-
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id")
+    @JsonBackReference
     private Course course;
 }

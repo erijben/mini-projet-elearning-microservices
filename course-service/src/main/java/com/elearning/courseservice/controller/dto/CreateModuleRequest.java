@@ -1,15 +1,17 @@
 package com.elearning.courseservice.controller.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class CreateModuleRequest {
 
     @NotBlank
     private String title;
 
     private String content;
-
-    private Integer orderIndex;
 }
