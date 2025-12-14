@@ -6,7 +6,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.security.authentication.*;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -17,12 +17,21 @@ import java.util.List;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
-    @Autowired private JwtUtils jwtUtils;
+    @Autowired
+    private JwtUtils jwtUtils;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws java.io.IOException, jakarta.servlet.ServletException {
+
+        // Ignorer les endpoints publics
+        String path = request.getServletPath();
+        if (path.startsWith("/auth/") || path.startsWith("/h2-console/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         final String header = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
@@ -30,17 +39,16 @@ public class JwtFilter extends OncePerRequestFilter {
                 Claims claims = jwtUtils.validateAndParse(token).getBody();
                 Long userId = Long.parseLong(claims.getSubject());
                 String role = claims.get("role", String.class);
-                String username = claims.get("username", String.class);
 
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                         userId, null, List.of(new SimpleGrantedAuthority(role))
                 );
                 SecurityContextHolder.getContext().setAuthentication(auth);
             } catch (Exception ex) {
-                // invalid token -> ignore, let authorization fail later if endpoint needs auth
-                logger.warn("Invalid JWT: " + ex.getMessage());
+                logger.warn("JWT invalide: " + ex.getMessage());
             }
         }
+
         filterChain.doFilter(request, response);
     }
 }
