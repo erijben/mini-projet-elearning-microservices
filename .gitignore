@@ -1,0 +1,15 @@
+# Build
+target/
+build/
+
+# IDE / outils
+.idea/
+*.iml
+.vscode/
+
+# Logs
+*.log
+
+# Fichiers OS
+.DS_Store
+Thumbs.db
