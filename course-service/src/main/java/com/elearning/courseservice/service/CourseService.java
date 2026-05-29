@@ -1,11 +1,13 @@
 package com.elearning.courseservice.service;
 
+import com.elearning.courseservice.config.RabbitConfig;
 import com.elearning.courseservice.controller.dto.CreateCourseRequest;
 import com.elearning.courseservice.model.Course;
 import com.elearning.courseservice.model.Module;
 import com.elearning.courseservice.repository.CourseRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,6 +18,7 @@ import java.util.List;
 public class CourseService {
 
     private final CourseRepository courseRepository;
+    private final RabbitTemplate rabbitTemplate;
 
     // -------- CREATE --------
     public Course createCourse(CreateCourseRequest request) {
@@ -27,7 +30,6 @@ public class CourseService {
                 .level(request.getLevel())
                 .build();
 
-        // créer les modules (si tu en as dans la requête)
         if (request.getModules() != null) {
             request.getModules().forEach(mr -> {
                 Module module = Module.builder()
@@ -38,7 +40,18 @@ public class CourseService {
             });
         }
 
-        return courseRepository.save(course);
+        Course saved = courseRepository.save(course);
+
+        // Publier un événement pour chaque module créé
+        saved.getModules().forEach(m -> {
+            String payload = String.format(
+                "{\"courseId\":%d,\"moduleId\":%d,\"title\":\"%s\"}",
+                saved.getId(), m.getId(), m.getTitle()
+            );
+            rabbitTemplate.convertAndSend(RabbitConfig.NEW_MODULE_QUEUE, payload);
+        });
+
+        return saved;
     }
 
     // -------- READ ALL --------

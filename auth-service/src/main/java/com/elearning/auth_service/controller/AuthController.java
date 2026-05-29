@@ -17,6 +17,7 @@ public class AuthController {
 
     @Autowired private UserService userService;
     @Autowired private JwtUtils jwtUtils;
+    @Autowired private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Validated @RequestBody RegisterRequest req) {
@@ -32,10 +33,7 @@ public class AuthController {
         var opt = userService.findByUsername(req.getUsername());
         if (opt.isEmpty()) return ResponseEntity.status(401).body(Map.of("error", "invalid_credentials"));
         User u = opt.get();
-        // check password
-        org.springframework.security.crypto.password.PasswordEncoder encoder =
-                new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
-        if (!encoder.matches(req.getPassword(), u.getPassword())) {
+        if (!passwordEncoder.matches(req.getPassword(), u.getPassword())) {
             return ResponseEntity.status(401).body(Map.of("error", "invalid_credentials"));
         }
         String token = jwtUtils.generateToken(u.getId(), u.getUsername(), u.getRole());

@@ -23,10 +23,10 @@
     </properties>
 
     <dependencies>
-        <!-- WebFlux -->
+        <!-- Web MVC -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
         <!-- Actuator -->
